@@ -1,18 +1,10 @@
-/**
- * @fileoverview Servidor principal del juego Tic-tac-toe
- * @author Tu Nombre
- */
-
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
 
-/**
- * @interface IGameState
- * @description Interfaz que define el contrato para el estado del juego
- */
+// Interfaces
 class IGameState {
     makeMove(position) { throw new Error('Not implemented'); }
     checkWinner() { throw new Error('Not implemented'); }
@@ -20,44 +12,25 @@ class IGameState {
     resetSeries() { throw new Error('Not implemented'); }
 }
 
-/**
- * @interface IGameManager
- * @description Interfaz que define el contrato para la gestión de juegos
- */
 class IGameManager {
     createGame(player1, player2) { throw new Error('Not implemented'); }
     getGame(gameId) { throw new Error('Not implemented'); }
     removeGame(gameId) { throw new Error('Not implemented'); }
 }
 
-/**
- * @interface IConnectionManager
- * @description Interfaz que define el contrato para la gestión de conexiones
- */
 class IConnectionManager {
     handleConnection(socket) { throw new Error('Not implemented'); }
     handleDisconnection(socket) { throw new Error('Not implemented'); }
     handleReconnection(socket) { throw new Error('Not implemented'); }
 }
 
-/**
- * @interface IAIStrategy
- * @description Interfaz que define el contrato para las estrategias de IA
- */
+// AI Strategy Interface
 class IAIStrategy {
     getMove(board) { throw new Error('Not implemented'); }
 }
 
-/**
- * @class MinimaxStrategy
- * @implements {IAIStrategy}
- * @description Implementación de la estrategia Minimax para la IA
- */
+// Minimax Strategy Implementation
 class MinimaxStrategy extends IAIStrategy {
-    /**
-     * @param {Array} board - Tablero actual del juego
-     * @returns {number} - Posición del mejor movimiento
-     */
     getMove(board) {
         let bestScore = -Infinity;
         let bestMove = 0;
@@ -78,13 +51,6 @@ class MinimaxStrategy extends IAIStrategy {
         return bestMove;
     }
 
-    /**
-     * @private
-     * @param {Array} board - Tablero actual
-     * @param {number} depth - Profundidad actual en el árbol de decisiones
-     * @param {boolean} isMaximizing - Indica si es el turno del maximizador
-     * @returns {number} - Puntuación del movimiento
-     */
     minimax(board, depth, isMaximizing) {
         const winner = this.checkWinner(board);
         if (winner === 'O') return 10 - depth;
@@ -116,11 +82,6 @@ class MinimaxStrategy extends IAIStrategy {
         }
     }
 
-    /**
-     * @private
-     * @param {Array} board - Tablero a verificar
-     * @returns {string|null} - Símbolo del ganador o null
-     */
     checkWinner(board) {
         const winPatterns = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -137,26 +98,13 @@ class MinimaxStrategy extends IAIStrategy {
         return null;
     }
 
-    /**
-     * @private
-     * @param {Array} board - Tablero a verificar
-     * @returns {boolean} - True si el tablero está lleno
-     */
     isBoardFull(board) {
         return !board.includes(null);
     }
 }
 
-/**
- * @class RandomStrategy
- * @implements {IAIStrategy}
- * @description Implementación de la estrategia aleatoria para la IA
- */
+// Random Strategy Implementation (for testing or easy mode)
 class RandomStrategy extends IAIStrategy {
-    /**
-     * @param {Array} board - Tablero actual del juego
-     * @returns {number} - Posición del movimiento aleatorio
-     */
     getMove(board) {
         const availableMoves = board
             .map((cell, index) => cell === null ? index : null)
@@ -169,16 +117,8 @@ class RandomStrategy extends IAIStrategy {
     }
 }
 
-/**
- * @class AIFactory
- * @description Factory para crear instancias de estrategias de IA
- */
+// AI Factory
 class AIFactory {
-    /**
-     * @static
-     * @param {string} strategyType - Tipo de estrategia a crear
-     * @returns {IAIStrategy} - Instancia de la estrategia
-     */
     static createAI(strategyType = 'minimax') {
         switch (strategyType.toLowerCase()) {
             case 'random':
@@ -190,15 +130,8 @@ class AIFactory {
     }
 }
 
-/**
- * @class GameState
- * @implements {IGameState}
- * @description Implementación del estado del juego
- */
+// Game State Implementation
 class GameState extends IGameState {
-    /**
-     * @param {IAIStrategy} aiStrategy - Estrategia de IA a utilizar
-     */
     constructor(aiStrategy = null) {
         super();
         this.board = Array(9).fill(null);
@@ -212,10 +145,6 @@ class GameState extends IGameState {
         this.aiStrategy = aiStrategy || AIFactory.createAI();
     }
 
-    /**
-     * @param {number} position - Posición donde hacer el movimiento
-     * @returns {boolean} - True si el movimiento fue válido
-     */
     makeMove(position) {
         if (this.board[position] === null && !this.winner) {
             this.board[position] = this.currentPlayer;
@@ -226,10 +155,6 @@ class GameState extends IGameState {
         return false;
     }
 
-    /**
-     * @private
-     * Verifica si hay un ganador en el tablero actual
-     */
     checkWinner() {
         const winPatterns = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -251,9 +176,6 @@ class GameState extends IGameState {
         }
     }
 
-    /**
-     * Avanza a la siguiente ronda
-     */
     nextRound() {
         if (this.round < this.maxRounds) {
             this.board = Array(9).fill(null);
@@ -266,10 +188,6 @@ class GameState extends IGameState {
         }
     }
 
-    /**
-     * @private
-     * Determina el ganador de la serie
-     */
     determineSeriesWinner() {
         if (this.scores.X > this.scores.O) {
             this.seriesWinner = 'X';
@@ -280,9 +198,6 @@ class GameState extends IGameState {
         }
     }
 
-    /**
-     * Reinicia la serie
-     */
     resetSeries() {
         this.board = Array(9).fill(null);
         this.currentPlayer = 'X';
@@ -293,9 +208,6 @@ class GameState extends IGameState {
         this.seriesWinner = null;
     }
 
-    /**
-     * @returns {boolean} - True si la IA hizo un movimiento
-     */
     makeAIMove() {
         if (this.currentPlayer === 'O' && !this.winner) {
             const move = this.aiStrategy.getMove([...this.board]);
@@ -307,18 +219,10 @@ class GameState extends IGameState {
     }
 }
 
-/**
- * @class GameManager
- * @implements {IGameManager}
- * @description Implementación del patrón Singleton para la gestión de juegos
- */
+// Game Manager Implementation (Singleton)
 class GameManager extends IGameManager {
     static instance = null;
 
-    /**
-     * @static
-     * @returns {GameManager} - Instancia única del GameManager
-     */
     static getInstance() {
         if (!GameManager.instance) {
             GameManager.instance = new GameManager();
@@ -337,11 +241,6 @@ class GameManager extends IGameManager {
         GameManager.instance = this;
     }
 
-    /**
-     * @param {string} player1 - ID del primer jugador
-     * @param {string} player2 - ID del segundo jugador
-     * @returns {string} - ID del juego creado
-     */
     createGame(player1, player2) {
         const gameId = Date.now().toString();
         const game = {
@@ -357,27 +256,14 @@ class GameManager extends IGameManager {
         return gameId;
     }
 
-    /**
-     * @param {string} gameId - ID del juego
-     * @returns {Object|null} - Estado del juego o null si no existe
-     */
     getGame(gameId) {
         return this.games.get(gameId);
     }
 
-    /**
-     * @param {string} gameId - ID del juego a eliminar
-     */
     removeGame(gameId) {
         this.games.delete(gameId);
     }
 
-    /**
-     * @param {string} playerId - ID del jugador
-     * @param {string} playerName - Nombre del jugador
-     * @param {string} aiStrategy - Estrategia de IA a utilizar
-     * @returns {string} - ID del juego creado
-     */
     createSinglePlayerGame(playerId, playerName, aiStrategy = 'minimax') {
         const gameId = Date.now().toString();
         const game = {
@@ -395,26 +281,15 @@ class GameManager extends IGameManager {
     }
 }
 
-/**
- * @class TurnTimeoutManager
- * @description Gestiona los timeouts de los turnos
- */
+// --- Turn Timeout Management ---
 class TurnTimeoutManager {
-    /**
-     * @param {Object} io - Instancia de Socket.IO
-     * @param {GameManager} gameManager - Instancia del GameManager
-     */
     constructor(io, gameManager) {
         this.io = io;
         this.gameManager = gameManager;
-        this.timers = new Map();
-        this.TIMEOUT_MS = 30000;
+        this.timers = new Map(); // gameId -> timeoutId
+        this.TIMEOUT_MS = 30000; // 30 segundos
     }
 
-    /**
-     * @param {string} gameId - ID del juego
-     * @param {string} currentPlayerId - ID del jugador actual
-     */
     startTurnTimer(gameId, currentPlayerId) {
         this.clearTurnTimer(gameId);
         const timeoutId = setTimeout(() => {
@@ -423,9 +298,6 @@ class TurnTimeoutManager {
         this.timers.set(gameId, timeoutId);
     }
 
-    /**
-     * @param {string} gameId - ID del juego
-     */
     clearTurnTimer(gameId) {
         if (this.timers.has(gameId)) {
             clearTimeout(this.timers.get(gameId));
@@ -433,18 +305,13 @@ class TurnTimeoutManager {
         }
     }
 
-    /**
-     * @private
-     * @param {string} gameId - ID del juego
-     * @param {string} playerId - ID del jugador que se quedó sin tiempo
-     */
     handleTimeout(gameId, playerId) {
         const game = this.gameManager.getGame(gameId);
         if (!game || game.state.winner || game.state.isDraw) return;
-
+        // Forzar cambio de turno
         game.state.currentPlayer = game.state.currentPlayer === 'X' ? 'O' : 'X';
         this.io.to(gameId).emit('turnTimeout', { timedOutPlayer: playerId });
-        
+        // Enviar nuevo estado de juego
         this.io.to(gameId).emit('gameState', {
             board: game.state.board,
             currentPlayer: game.state.currentPlayer,
@@ -455,7 +322,7 @@ class TurnTimeoutManager {
             maxRounds: game.state.maxRounds,
             seriesWinner: game.state.seriesWinner
         });
-
+        // Iniciar timer para el nuevo turno
         const nextPlayerId = Object.keys(game.symbols).find(id => game.symbols[id] === game.state.currentPlayer);
         if (nextPlayerId) {
             this.startTurnTimer(gameId, nextPlayerId);
@@ -463,16 +330,8 @@ class TurnTimeoutManager {
     }
 }
 
-/**
- * @class ConnectionManager
- * @implements {IConnectionManager}
- * @description Gestiona las conexiones de los jugadores
- */
+// Connection Manager Implementation
 class ConnectionManager extends IConnectionManager {
-    /**
-     * @param {Object} io - Instancia de Socket.IO
-     * @param {GameManager} gameManager - Instancia del GameManager
-     */
     constructor(io, gameManager) {
         super();
         this.io = io;
@@ -482,17 +341,11 @@ class ConnectionManager extends IConnectionManager {
         this.RATE_LIMIT_MAX = 5;
     }
 
-    /**
-     * @param {Object} socket - Socket del jugador
-     */
     handleConnection(socket) {
         console.log('User connected:', socket.id);
         this.setupSocketListeners(socket);
     }
 
-    /**
-     * @param {Object} socket - Socket del jugador
-     */
     handleDisconnection(socket) {
         console.log('User disconnected:', socket.id);
         this.gameManager.waitingPlayers = this.gameManager.waitingPlayers.filter(id => id !== socket.id);
@@ -500,9 +353,6 @@ class ConnectionManager extends IConnectionManager {
         this.handlePlayerDisconnection(socket);
     }
 
-    /**
-     * @param {Object} socket - Socket del jugador
-     */
     handleReconnection(socket) {
         const playerInfo = this.disconnectedPlayers?.get(socket.id);
         if (playerInfo) {
@@ -517,10 +367,6 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     */
     setupSocketListeners(socket) {
         socket.on('join', ({ playerName }) => this.handleJoin(socket, playerName));
         socket.on('move', ({ gameId, position }) => this.handleMove(socket, gameId, position));
@@ -528,15 +374,9 @@ class ConnectionManager extends IConnectionManager {
         socket.on('abandonGame', ({ gameId }) => this.handleAbandonGame(socket, gameId));
         socket.on('disconnect', () => this.handleDisconnection(socket));
         socket.on('reconnect', () => this.handleReconnection(socket));
-        socket.on('symbolColorChange', ({ gameId, color, symbol }) => this.handleSymbolColorChange(socket, gameId, color, symbol));
+        socket.on('symbolColorChange', ({ gameId, color }) => this.handleSymbolColorChange(socket, gameId, color));
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} playerName - Nombre del jugador
-     * @param {string} gameMode - Modo de juego
-     */
     handleJoin(socket, playerName, gameMode = 'multiplayer') {
         console.log('Player joined:', { socketId: socket.id, playerName, gameMode });
         this.gameManager.playerNames.set(socket.id, playerName);
@@ -551,10 +391,6 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     */
     createNewGame(socket) {
         const player1 = this.gameManager.waitingPlayers.shift();
         const player2 = socket.id;
@@ -588,20 +424,15 @@ class ConnectionManager extends IConnectionManager {
         });
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} gameId - ID del juego
-     * @param {number} position - Posición del movimiento
-     */
     handleMove(socket, gameId, position) {
         if (!this.validateMove(socket, gameId, position)) return;
 
         const game = this.gameManager.getGame(gameId);
         if (game.state.makeMove(position)) {
-            turnTimeoutManager.clearTurnTimer(gameId);
+            turnTimeoutManager.clearTurnTimer(gameId); // Limpiar timer al mover
             this.broadcastGameState(gameId, game);
             
+            // Handle AI move in single player mode
             if (game.isSinglePlayer && !game.state.winner && !game.state.isDraw) {
                 setTimeout(() => {
                     if (game.state.makeAIMove()) {
@@ -614,14 +445,8 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} gameId - ID del juego
-     * @param {number} position - Posición del movimiento
-     * @returns {boolean} - True si el movimiento es válido
-     */
     validateMove(socket, gameId, position) {
+        // Rate limiting
         const now = Date.now();
         if (!this.rateLimitMap.has(socket.id)) this.rateLimitMap.set(socket.id, []);
         const timestamps = this.rateLimitMap.get(socket.id).filter(ts => now - ts < this.RATE_LIMIT_WINDOW);
@@ -632,6 +457,7 @@ class ConnectionManager extends IConnectionManager {
         timestamps.push(now);
         this.rateLimitMap.set(socket.id, timestamps);
 
+        // Position validation
         if (typeof position !== 'number' || position < 0 || position > 8) {
             socket.emit('errorMsg', { type: 'error', payload: { message: 'Posición inválida.' } });
             return false;
@@ -652,11 +478,6 @@ class ConnectionManager extends IConnectionManager {
         return true;
     }
 
-    /**
-     * @private
-     * @param {string} gameId - ID del juego
-     * @param {Object} game - Estado del juego
-     */
     broadcastGameState(gameId, game) {
         this.io.to(gameId).emit('gameState', {
             board: game.state.board,
@@ -669,6 +490,7 @@ class ConnectionManager extends IConnectionManager {
             seriesWinner: game.state.seriesWinner
         });
 
+        // Iniciar/cancelar timer de turno solo si no hay ganador/empate
         if (!game.state.winner && !game.state.isDraw) {
             const currentPlayerId = Object.keys(game.symbols).find(id => game.symbols[id] === game.state.currentPlayer);
             if (currentPlayerId) {
@@ -689,6 +511,7 @@ class ConnectionManager extends IConnectionManager {
                         round: game.state.round,
                         maxRounds: game.state.maxRounds
                     });
+                    // Iniciar timer para el nuevo turno
                     const currentPlayerId = Object.keys(game.symbols).find(id => game.symbols[id] === game.state.currentPlayer);
                     if (currentPlayerId) {
                         turnTimeoutManager.startTurnTimer(gameId, currentPlayerId);
@@ -709,12 +532,6 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} gameId - ID del juego
-     * @param {string} message - Mensaje del chat
-     */
     handleChat(socket, gameId, message) {
         const game = this.gameManager.getGame(gameId);
         if (game && game.players.includes(socket.id)) {
@@ -729,11 +546,6 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} gameId - ID del juego
-     */
     handleAbandonGame(socket, gameId) {
         const game = this.gameManager.getGame(gameId);
         if (game) {
@@ -745,10 +557,6 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     */
     handlePlayerDisconnection(socket) {
         for (const [gameId, game] of this.gameManager.games) {
             if (game.players.includes(socket.id)) {
@@ -764,11 +572,6 @@ class ConnectionManager extends IConnectionManager {
         }
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} playerName - Nombre del jugador
-     */
     createSinglePlayerGame(socket, playerName) {
         const gameId = this.gameManager.createSinglePlayerGame(socket.id, playerName);
         socket.join(gameId);
@@ -794,30 +597,24 @@ class ConnectionManager extends IConnectionManager {
         });
     }
 
-    /**
-     * @private
-     * @param {Object} socket - Socket del jugador
-     * @param {string} gameId - ID del juego
-     * @param {string} color - Color del símbolo
-     * @param {string} symbol - Símbolo del jugador
-     */
     handleSymbolColorChange(socket, gameId, color, symbol) {
         const game = this.gameManager.getGame(gameId);
         if (game && game.players.includes(socket.id)) {
+            // Emitir el cambio de color a todos los jugadores en la partida
             this.io.to(gameId).emit('symbolColorChanged', { color, symbol });
         }
     }
 }
 
-// Configuración del servidor
+// Server Configuration
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Inicialización de managers
+// Initialize managers
 const gameManager = GameManager.getInstance();
 const connectionManager = new ConnectionManager(io, gameManager);
 const turnTimeoutManager = new TurnTimeoutManager(io, gameManager);
 
-// Manejo de conexiones Socket.IO
+// Socket.io connection handling
 io.on('connection', (socket) => {
     connectionManager.handleConnection(socket);
 });

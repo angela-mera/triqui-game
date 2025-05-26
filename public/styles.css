@@ -23,6 +23,7 @@ body.light {
     --accent-color: #D8CFF8;
     --text-color: #4A4A4A;
     --background-color: #F4F1FB;
+    --opponent-symbol-color: #da2727;
 }
 
 body.dark {
@@ -31,6 +32,7 @@ body.dark {
     --accent-color: #666666;
     --text-color: #FCFCFC;
     --background-color: #1A1A1A;
+    --opponent-symbol-color: #eb7171;
 }
 
 body.neon {
@@ -39,6 +41,7 @@ body.neon {
     --accent-color: #39ff14;
     --text-color: #fff;
     --background-color: #0a0020;
+    --opponent-symbol-color: #fd655a;
 }
 
 body.neon {
@@ -99,12 +102,11 @@ body.neon .cell:hover {
     box-shadow: 0 0 16px 4px #00fff7, 0 0 8px 2px #ff00ea;
 }
 body.neon .cell.x {
-    color: #ff00ea;
+    color: var(--secondary-color);
     text-shadow: 0 0 8px #ff00ea, 0 0 4px #fff;
 }
 body.neon .cell.o {
-    color: #00fff7;
-    text-shadow: 0 0 8px #00fff7, 0 0 4px #fff;
+    color: var(--primary-color);
 }
 
 body.neon .customization-panel,
@@ -358,7 +360,7 @@ body.dark .score-divider{
 }
 
 .cell.o {
-    color: var(--primary-color);
+    color: var(--secondary-color);
 }
 
 /* Customization Panel */
