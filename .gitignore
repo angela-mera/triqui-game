@@ -2,6 +2,9 @@
 node_modules/
 package-lock.json
 
+# Archivos de entorno
+.env
+
 # Logs
 logs
 *.log
@@ -9,12 +12,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Entorno
-.env
-.env.local
-.env.*.local
-
-# Directorios de sistema
+# Archivos del sistema
 .DS_Store
 Thumbs.db
 
@@ -30,5 +28,5 @@ build/
 coverage/
 
 # Archivos temporales
-*.tmp
-*.temp 
+tmp/
+temp/ 

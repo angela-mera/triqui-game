@@ -32,28 +32,70 @@ Un juego de Tic-tac-toe desarrollado con Node.js y Socket.io, que ofrece una exp
   - Node.js
   - Express
   - Socket.io
+  - MySQL (próximamente)
 
 - **Frontend**
   - HTML5
   - CSS3 (con variables CSS)
   - JavaScript (ES6+)
 
+## Estructura del Proyecto
+
+```
+├── config/                 # Configuración
+│   ├── database.js        # Configuración de MySQL
+│   └── .env.example       # Variables de entorno de ejemplo
+├── database/              # Scripts de base de datos
+│   └── schema.sql         # Esquema de la base de datos
+├── models/                # Modelos de datos
+│   ├── Game.js           # Modelo de juego
+│   └── Player.js         # Modelo de jugador
+├── public/               # Archivos estáticos
+│   ├── index.html       # Página principal
+│   ├── styles.css       # Estilos
+│   └── game.js          # Lógica del juego
+├── server.js            # Servidor principal
+└── package.json         # Dependencias
+```
+
 ## Instalación
 
-1. Instala las dependencias:
+1. Clona el repositorio:
+```bash
+git clone <url-del-repositorio>
+cd tic-tac-toe
+```
+
+2. Instala las dependencias:
 ```bash
 npm install
 ```
 
-2. Inicia el servidor:
+3. Configura la base de datos (próximamente):
+   - Instala MySQL
+   - Crea la base de datos usando `database/schema.sql`
+   - Copia `.env.example` a `.env` y configura las variables
+
+4. Inicia el servidor:
 ```bash
 npm start
 ```
 
-3. Abre tu navegador en:
+5. Abre tu navegador en:
 ```
 http://localhost:3000
 ```
+
+## Configuración de la Base de Datos (Próximamente)
+
+1. Instala MySQL en tu sistema
+2. Crea la base de datos:
+```sql
+source database/schema.sql
+```
+3. Configura las variables de entorno:
+   - Copia `.env.example` a `.env`
+   - Actualiza los valores según tu configuración
 
 ## Cómo Jugar
 
