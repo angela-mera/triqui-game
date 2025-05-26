@@ -127,7 +127,3 @@ PORT=3000 npm start
 - Algoritmo Minimax para decisiones óptimas
 - Dificultad ajustable
 - Movimientos con retraso simulado
-
-## Licencia
-
-Este proyecto está bajo la Licencia ISC.
