@@ -43,8 +43,8 @@ class GameServer {
      */
     initializeManagers() {
         this.gameManager = GameManager.getInstance();
-        this.connectionManager = new ConnectionManager(this.io, this.gameManager);
         this.turnTimeoutManager = new TurnTimeoutManager(this.io, this.gameManager);
+        this.connectionManager = new ConnectionManager(this.io, this.gameManager, this.turnTimeoutManager);
     }
 
     /**

@@ -542,8 +542,15 @@ class Game {
     }
 
     updateScores(scores) {
+        this.scores = scores;
         this.scoreX.textContent = scores.X;
         this.scoreO.textContent = scores.O;
+        
+        // Actualizar puntos basados en victorias
+        this.points = {
+            X: scores.X * 1000,
+            O: scores.O * 1000
+        };
     }
 
     updateRound(round) {
@@ -599,7 +606,7 @@ class Game {
         } else if (winner === 'Empate') {
             this.status.textContent = "¡La serie ha terminado en empate!";
         } else {
-            this.status.textContent = "¡La IA ha ganado la serie!";
+            this.status.textContent = "¡El oponente ha ganado la serie!";
         }
     }
 

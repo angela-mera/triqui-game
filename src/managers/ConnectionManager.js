@@ -1,4 +1,5 @@
 const IConnectionManager = require('../interfaces/IConnectionManager');
+const TurnTimeoutManager = require('./TurnTimeoutManager');
 
 /**
  * @class ConnectionManager
@@ -9,11 +10,13 @@ class ConnectionManager extends IConnectionManager {
     /**
      * @param {SocketIO.Server} io - Instancia de Socket.IO
      * @param {GameManager} gameManager - Instancia del GameManager
+     * @param {TurnTimeoutManager} turnTimeoutManager - Instancia del TurnTimeoutManager
      */
-    constructor(io, gameManager) {
+    constructor(io, gameManager, turnTimeoutManager) {
         super();
         this.io = io;
         this.gameManager = gameManager;
+        this.turnTimeoutManager = turnTimeoutManager;
         this.rateLimitMap = new Map();
         this.RATE_LIMIT_WINDOW = 2000;
         this.RATE_LIMIT_MAX = 5;
@@ -150,7 +153,7 @@ class ConnectionManager extends IConnectionManager {
 
         const game = this.gameManager.getGame(gameId);
         if (game.state.makeMove(position)) {
-            turnTimeoutManager.clearTurnTimer(gameId);
+            this.turnTimeoutManager.clearTurnTimer(gameId);
             this.broadcastGameState(gameId, game);
             
             if (game.isSinglePlayer && !game.state.winner && !game.state.isDraw) {
@@ -226,10 +229,10 @@ class ConnectionManager extends IConnectionManager {
         if (!game.state.winner && !game.state.isDraw) {
             const currentPlayerId = Object.keys(game.symbols).find(id => game.symbols[id] === game.state.currentPlayer);
             if (currentPlayerId) {
-                turnTimeoutManager.startTurnTimer(gameId, currentPlayerId);
+                this.turnTimeoutManager.startTurnTimer(gameId, currentPlayerId);
             }
         } else {
-            turnTimeoutManager.clearTurnTimer(gameId);
+            this.turnTimeoutManager.clearTurnTimer(gameId);
         }
 
         if (game.state.winner || game.state.isDraw) {
@@ -245,7 +248,7 @@ class ConnectionManager extends IConnectionManager {
                     });
                     const currentPlayerId = Object.keys(game.symbols).find(id => game.symbols[id] === game.state.currentPlayer);
                     if (currentPlayerId) {
-                        turnTimeoutManager.startTurnTimer(gameId, currentPlayerId);
+                        this.turnTimeoutManager.startTurnTimer(gameId, currentPlayerId);
                     }
                 } else {
                     game.state.determineSeriesWinner();
@@ -257,7 +260,7 @@ class ConnectionManager extends IConnectionManager {
                         maxRounds: game.state.maxRounds,
                         seriesWinner: game.state.seriesWinner
                     });
-                    turnTimeoutManager.clearTurnTimer(gameId);
+                    this.turnTimeoutManager.clearTurnTimer(gameId);
                 }
             }, 2000);
         }
